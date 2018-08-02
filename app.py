@@ -1,18 +1,28 @@
 from flask import Flask, flash, render_template, request, redirect, session, url_for
 import genomelink
 
+traits = ['agreeableness', 'anger', 'conscientiousness', 'depression', 'extraversion', 'harm-avoidance',
+          'hearing-function', 'intelligence', 'job-related-exhaustion', 'mathematical-ability', 'morning-person',
+          'neuroticism', 'novelty-seeking', 'openness', 'reading-and-spelling-ability', 'reward-dependence',
+          'sleep-duration', 'word-reading-ability']
+
+app_scope = ''
+for trait in traits:
+    app_scope += 'report:'+ trait + ' '
+app_scope = app_scope.strip()
 
 def create_app():
     app = Flask(__name__)
 
     @app.route('/')
     def index():
-        authorize_url = genomelink.OAuth.authorize_url(scope=['report:eye-color report:beard-thickness report:morning-person'])
+
+        authorize_url = genomelink.OAuth.authorize_url(scope=[app_scope])
 
         # Fetching a protected resource using an OAuth2 token if exists.
         reports = []
         if session.get('oauth_token'):
-            for name in ['eye-color', 'beard-thickness', 'morning-person']:
+            for name in traits:
                 reports.append(genomelink.Report.fetch(name=name, population='european', token=session['oauth_token']))
 
         return render_template('index.html', authorize_url=authorize_url, reports=reports)
